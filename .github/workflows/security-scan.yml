@@ -1,3 +1,103 @@
+# # name: ShieldFlow Security Pipeline
+
+# # on:
+# #   push:
+# #   pull_request:
+
+# # jobs:
+# #   security-scan:
+# #     runs-on: ubuntu-latest
+
+# #     steps:
+# #       # ----------------------------------------------------
+# #       # 1. Checkout repo (FULL HISTORY IMPORTANT FOR GITLEAKS)
+# #       # ----------------------------------------------------
+# #       - name: Checkout repo
+# #         uses: actions/checkout@v4
+# #         with:
+# #           fetch-depth: 0
+
+# #       # ----------------------------------------------------
+# #       # 2. Debug: show files in runner
+# #       # ----------------------------------------------------
+# #       - name: Show repo files
+# #         run: |
+# #           echo "📂 Repository contents:"
+# #           ls -R
+
+# #       # ----------------------------------------------------
+# #       # 3. Setup Python (for Semgrep)
+# #       # ----------------------------------------------------
+# #       - name: Setup Python
+# #         uses: actions/setup-python@v5
+# #         with:
+# #           python-version: "3.12"
+
+# #       # ----------------------------------------------------
+# #       # 4. Install Semgrep
+# #       # ----------------------------------------------------
+# #       - name: Install Semgrep
+# #         run: pip install semgrep
+
+# #       # ----------------------------------------------------
+# #       # 5. Run Semgrep (SAST)
+# #       # ----------------------------------------------------
+# #       - name: Run Semgrep scan
+# #         run: |
+# #           semgrep --config auto . --json > semgrep.json
+
+# #       - name: Upload Semgrep artifact
+# #         uses: actions/upload-artifact@v4
+# #         with:
+# #           name: semgrep-report
+# #           path: semgrep.json
+
+# #       # ----------------------------------------------------
+# #       # 6. Install Gitleaks
+# #       # ----------------------------------------------------
+# #       - name: Install Gitleaks
+# #         run: |
+# #           set -e
+
+# #           wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
+# #           tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
+
+# #           chmod +x gitleaks || chmod +x gitleaks*
+
+# #           ./gitleaks version
+
+# #       # ----------------------------------------------------
+# #       # 7. Run Gitleaks (FORCE DETECTION + DEBUG)
+# #       # ----------------------------------------------------
+# #       - name: Run Gitleaks scan
+# #         run: |
+# #           ./gitleaks detect \
+# #             --source . \
+# #             --report-format json \
+# #             --report-path gitleaks.json \
+# #             --verbose || true
+
+# #       # ----------------------------------------------------
+# #       # 8. Show outputs (DEBUG)
+# #       # ----------------------------------------------------
+# #       - name: Show Semgrep output
+# #         run: cat semgrep.json
+
+# #       - name: Show Gitleaks output
+# #         run: |
+# #           echo "🔐 Gitleaks Results:"
+# #           cat gitleaks.json || echo "No gitleaks output found"
+
+# #       # ----------------------------------------------------
+# #       # 9. Upload artifacts
+# #       # ----------------------------------------------------
+# #       - name: Upload Gitleaks artifact
+# #         uses: actions/upload-artifact@v4
+# #         with:
+# #           name: gitleaks-report
+# #           path: gitleaks.json
+
+
 # name: ShieldFlow Security Pipeline
 
 # on:
@@ -9,42 +109,24 @@
 #     runs-on: ubuntu-latest
 
 #     steps:
-#       # ----------------------------------------------------
-#       # 1. Checkout repo (FULL HISTORY IMPORTANT FOR GITLEAKS)
-#       # ----------------------------------------------------
 #       - name: Checkout repo
 #         uses: actions/checkout@v4
 #         with:
 #           fetch-depth: 0
 
-#       # ----------------------------------------------------
-#       # 2. Debug: show files in runner
-#       # ----------------------------------------------------
 #       - name: Show repo files
-#         run: |
-#           echo "📂 Repository contents:"
-#           ls -R
+#         run: ls -R
 
-#       # ----------------------------------------------------
-#       # 3. Setup Python (for Semgrep)
-#       # ----------------------------------------------------
 #       - name: Setup Python
 #         uses: actions/setup-python@v5
 #         with:
 #           python-version: "3.12"
 
-#       # ----------------------------------------------------
-#       # 4. Install Semgrep
-#       # ----------------------------------------------------
 #       - name: Install Semgrep
 #         run: pip install semgrep
 
-#       # ----------------------------------------------------
-#       # 5. Run Semgrep (SAST)
-#       # ----------------------------------------------------
 #       - name: Run Semgrep scan
-#         run: |
-#           semgrep --config auto . --json > semgrep.json
+#         run: semgrep --config auto . --json > semgrep.json
 
 #       - name: Upload Semgrep artifact
 #         uses: actions/upload-artifact@v4
@@ -52,45 +134,26 @@
 #           name: semgrep-report
 #           path: semgrep.json
 
-#       # ----------------------------------------------------
-#       # 6. Install Gitleaks
-#       # ----------------------------------------------------
 #       - name: Install Gitleaks
 #         run: |
-#           set -e
-
 #           wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
 #           tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
+#           chmod +x gitleaks
 
-#           chmod +x gitleaks || chmod +x gitleaks*
+#       - name: Confirm secret file exists
+#         run: cat test_secret.py
 
-#           ./gitleaks version
-
-#       # ----------------------------------------------------
-#       # 7. Run Gitleaks (FORCE DETECTION + DEBUG)
-#       # ----------------------------------------------------
 #       - name: Run Gitleaks scan
 #         run: |
 #           ./gitleaks detect \
 #             --source . \
 #             --report-format json \
 #             --report-path gitleaks.json \
-#             --verbose || true
-
-#       # ----------------------------------------------------
-#       # 8. Show outputs (DEBUG)
-#       # ----------------------------------------------------
-#       - name: Show Semgrep output
-#         run: cat semgrep.json
+#             --verbose
 
 #       - name: Show Gitleaks output
-#         run: |
-#           echo "🔐 Gitleaks Results:"
-#           cat gitleaks.json || echo "No gitleaks output found"
+#         run: cat gitleaks.json
 
-#       # ----------------------------------------------------
-#       # 9. Upload artifacts
-#       # ----------------------------------------------------
 #       - name: Upload Gitleaks artifact
 #         uses: actions/upload-artifact@v4
 #         with:
@@ -109,22 +172,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ----------------------------
+      # 1. Checkout repo
+      # ----------------------------
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # ----------------------------
+      # 2. Debug files
+      # ----------------------------
       - name: Show repo files
         run: ls -R
 
+      # ----------------------------
+      # 3. Setup Python (Semgrep)
+      # ----------------------------
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      # ----------------------------
+      # 4. Install Semgrep
+      # ----------------------------
       - name: Install Semgrep
         run: pip install semgrep
 
+      # ----------------------------
+      # 5. Run Semgrep
+      # ----------------------------
       - name: Run Semgrep scan
         run: semgrep --config auto . --json > semgrep.json
 
@@ -134,28 +212,68 @@ jobs:
           name: semgrep-report
           path: semgrep.json
 
+      # ----------------------------
+      # 6. Install Gitleaks
+      # ----------------------------
       - name: Install Gitleaks
         run: |
           wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
           tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
           chmod +x gitleaks
 
-      - name: Confirm secret file exists
-        run: cat test_secret.py
-
+      # ----------------------------
+      # 7. Run Gitleaks
+      # ----------------------------
       - name: Run Gitleaks scan
         run: |
           ./gitleaks detect \
             --source . \
             --report-format json \
             --report-path gitleaks.json \
-            --verbose
-
-      - name: Show Gitleaks output
-        run: cat gitleaks.json
+            --verbose || true
 
       - name: Upload Gitleaks artifact
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
           path: gitleaks.json
+
+      # ----------------------------
+      # 8. INSTALL TRIVY
+      # ----------------------------
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.57.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.57.0_Linux-64bit.deb
+
+      # ----------------------------
+      # 9. RUN TRIVY (filesystem scan)
+      # ----------------------------
+      - name: Run Trivy scan
+        run: |
+          trivy fs . \
+            --format json \
+            --output trivy.json
+
+      # ----------------------------
+      # 10. Upload Trivy artifact
+      # ----------------------------
+      - name: Upload Trivy artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy.json
+
+      # ----------------------------
+      # 11. Debug outputs
+      # ----------------------------
+      - name: Show Semgrep output
+        run: cat semgrep.json
+
+      - name: Show Gitleaks output
+        run: cat gitleaks.json || true
+
+      - name: Show Trivy output
+        run: cat trivy.json || true
