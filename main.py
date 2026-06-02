@@ -192,3 +192,17 @@ def ingest_semgrep():
         "message": "semgrep ingestion completed",
         "count": len(findings)
     }
+
+from app.parsers.gitleaks_parser import parse_gitleaks_report
+from app.services.ingestion_service import ingest_findings
+
+@app.post("/ingest/gitleaks")
+def ingest_gitleaks(db: Session = Depends(get_db)):
+
+    findings = parse_gitleaks_report("gitleaks.json")
+    ingest_findings(findings, db)
+
+    return {
+        "message": "gitleaks ingestion completed",
+        "findings_ingested": len(findings)
+    }
