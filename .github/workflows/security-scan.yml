@@ -5,28 +5,36 @@
 #   pull_request:
 
 # jobs:
-#   semgrep-scan:
+#   security-scan:
 #     runs-on: ubuntu-latest
 
 #     steps:
+#       # ----------------------------------------------------
+#       # 1. Checkout code
+#       # ----------------------------------------------------
 #       - name: Checkout repo
 #         uses: actions/checkout@v4
 
+#       # ----------------------------------------------------
+#       # 2. Setup Python (for Semgrep)
+#       # ----------------------------------------------------
 #       - name: Setup Python
 #         uses: actions/setup-python@v5
 #         with:
 #           python-version: "3.12"
 
+#       # ----------------------------------------------------
+#       # 3. Install Semgrep
+#       # ----------------------------------------------------
 #       - name: Install Semgrep
 #         run: pip install semgrep
 
+#       # ----------------------------------------------------
+#       # 4. Run Semgrep (SAST)
+#       # ----------------------------------------------------
 #       - name: Run Semgrep scan
 #         run: |
 #           semgrep --config auto . --json > semgrep.json
-
-#       - name: Show scan summary (debug)
-#         run: |
-#           cat semgrep.json
 
 #       - name: Upload Semgrep artifact
 #         uses: actions/upload-artifact@v4
@@ -35,15 +43,48 @@
 #           path: semgrep.json
 
 #       # ----------------------------------------------------
-#       # 🚨 FUTURE: ingestion into ShieldFlow API
+#       # 5. Install Gitleaks (Secrets scanning)
 #       # ----------------------------------------------------
-#       # Uncomment this AFTER you expose your API via ngrok or cloud
-#       #
-#       # - name: Send to ShieldFlow ingestion API
-#       #   run: |
-#       #     curl -X POST "https://YOUR_PUBLIC_API/ingest/semgrep"
-#       # ----------------------------------------------------
+#       - name: Install Gitleaks
+#         run: |
+#           curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+#           chmod +x gitleaks
 
+#       # ----------------------------------------------------
+#       # 6. Run Gitleaks (Secrets detection)
+#       # ----------------------------------------------------
+#       - name: Run Gitleaks scan
+#         run: |
+#           ./gitleaks detect --source . --report-format json --report-path gitleaks.json || true
+
+#       - name: Upload Gitleaks artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: gitleaks-report
+#           path: gitleaks.json
+
+#       # ----------------------------------------------------
+#       # 7. Debug output (optional but useful now)
+#       # ----------------------------------------------------
+#       - name: Show Semgrep output
+#         run: cat semgrep.json
+
+#       - name: Show Gitleaks output
+#         run: cat gitleaks.json
+
+#       # ----------------------------------------------------
+#       # 8. Future: ingestion into ShieldFlow API (SOAR layer)
+#       # ----------------------------------------------------
+#       # Uncomment when ngrok / deployed API is ready
+#       #
+#       # - name: Send Semgrep results to API
+#       #   run: |
+#       #     curl -X POST "https://YOUR_NGROK_URL/ingest/semgrep"
+#       #
+#       # - name: Send Gitleaks results to API
+#       #   run: |
+#       #     curl -X POST "https://YOUR_NGROK_URL/ingest/gitleaks"
+#       # ----------------------------------------------------
 
 name: ShieldFlow Security Pipeline
 
@@ -90,11 +131,12 @@ jobs:
           path: semgrep.json
 
       # ----------------------------------------------------
-      # 5. Install Gitleaks (Secrets scanning)
+      # 5. Install Gitleaks (FIXED VERSION)
       # ----------------------------------------------------
       - name: Install Gitleaks
         run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+          wget https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
+          tar -xzf gitleaks-linux-amd64.tar.gz
           chmod +x gitleaks
 
       # ----------------------------------------------------
@@ -111,7 +153,7 @@ jobs:
           path: gitleaks.json
 
       # ----------------------------------------------------
-      # 7. Debug output (optional but useful now)
+      # 7. Debug output (safe for now)
       # ----------------------------------------------------
       - name: Show Semgrep output
         run: cat semgrep.json
@@ -122,7 +164,7 @@ jobs:
       # ----------------------------------------------------
       # 8. Future: ingestion into ShieldFlow API (SOAR layer)
       # ----------------------------------------------------
-      # Uncomment when ngrok / deployed API is ready
+      # Uncomment after ngrok / deployment is active
       #
       # - name: Send Semgrep results to API
       #   run: |
