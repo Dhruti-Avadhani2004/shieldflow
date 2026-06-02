@@ -1,0 +1,23 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database
+*.db
+*.sqlite3
+
+# Reports (scanner outputs)
+reports/
+
+# OS / IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log

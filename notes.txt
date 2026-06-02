@@ -1,0 +1,15 @@
+uvicorn main:app --reload
+
+{
+  "tool": "semgrep",
+  "type": "SAST",
+  "title": "SQL Injection",
+  "severity": "HIGH",
+  "file": "app.py",
+  "line": 42,
+  "description": "Potential SQL injection"
+}
+
+POST http://127.0.0.1:8000/ingest/semgrep
+
+http://127.0.0.1:8000/docs
