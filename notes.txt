@@ -13,3 +13,23 @@ uvicorn main:app --reload
 POST http://127.0.0.1:8000/ingest/semgrep
 
 http://127.0.0.1:8000/docs
+
+ngrok                                                                                                                          (Ctrl+C to quit)
+                                                                                                                                               
+�  One gateway for every AI model. Available in early access *now*: https://ngrok.com/r/ai                                                     
+                                                                                                                                               
+Session Status                online                                                                                                           
+Account                       dhrutia.btech23@rvu.edu.in (Plan: Free)                                                                          
+Version                       3.39.6                                                                                                           
+Region                        India (in)                                                                                                       
+Latency                       21ms                                                                                                             
+Web Interface                 http://127.0.0.1:4040                                                                                            
+Forwarding                    https://2002-2406-7400-94-674a-d473-66ec-4a80-8296.ngrok-free.app -> http://localhost:8000                       
+                                                                                                                                               
+Connections                   ttl     opn     rt1     rt5     p50     p90                                                                      
+                              2       0       0.02    0.01    5.03    5.06                                                                     
+                                                                                                                                               
+HTTP Requests                                                                                                                                  
+-------------                                                                                                                                  
+                                                                                                                                               
+20:15:24.534 IST POST /ingest/semgrep           200 OK    
