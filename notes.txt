@@ -33,3 +33,15 @@ HTTP Requests
 -------------                                                                                                                                  
                                                                                                                                                
 20:15:24.534 IST POST /ingest/semgrep           200 OK    
+
+
+
+SETTING UP THE SYSTEM
+
+1. uvicorn main:app --reload
+2. ngrok http 8000 (IN TERMINAL 2)
+3. https://xxxx.ngrok-free.app (COPY URL LIKE)
+
+
+Invoke-RestMethod -Method Post `
+-Uri "https://f34f-2406-7400-94-674a-d473-66ec-4a80-8296.ngrok-free.app/ingest/gitleaks"
