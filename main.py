@@ -31,39 +31,6 @@ app = FastAPI()
 def root():
     return {"message": "ShieldFlow is running"}
 
-# @app.post("/findings")
-# def create_finding(
-#     finding: Finding,
-#     db: Session = Depends(get_db)
-# ):
-
-#     stored_finding = FindingDB(
-#         id=str(uuid4()),
-#         created_at=datetime.utcnow().isoformat(),
-#         finding_hash=generate_finding_hash(
-#             finding.tool,
-#             finding.title,
-#             finding.file
-#         ),
-
-#         tool=finding.tool,
-#         type=finding.type,
-#         title=finding.title,
-#         severity=finding.severity,
-#         file=finding.file,
-#         line=finding.line,
-#         description=finding.description,
-#         status=finding.status
-#     )
-
-#     db.add(stored_finding)
-
-#     db.commit()
-
-#     return {
-#         "message": "finding stored",
-#         "id": stored_finding.id
-#     }
 
 @app.post("/findings")
 def create_finding(
