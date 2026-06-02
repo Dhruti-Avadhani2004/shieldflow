@@ -1,3 +1,107 @@
+# name: ShieldFlow Security Pipeline
+
+# on:
+#   push:
+#   pull_request:
+
+# jobs:
+#   security-scan:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       # ----------------------------------------------------
+#       # 1. Checkout repo
+#       # ----------------------------------------------------
+#       - name: Checkout repo
+#         uses: actions/checkout@v4
+#         with:
+#             fetch-depth: 0
+
+#       #---------------------------------------------------------
+#       # 2.5 debug notice
+#       - name: Show repo files
+#         run: ls -R
+#       #---------------------------------------------------------
+
+#       # ----------------------------------------------------
+#       # 2. Setup Python
+#       # ----------------------------------------------------
+#       - name: Setup Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.12"
+
+#       # ----------------------------------------------------
+#       # 3. Install Semgrep
+#       # ----------------------------------------------------
+#       - name: Install Semgrep
+#         run: pip install semgrep
+
+#       # ----------------------------------------------------
+#       # 4. Run Semgrep
+#       # ----------------------------------------------------
+#       - name: Run Semgrep scan
+#         run: semgrep --config auto . --json > semgrep.json
+
+#       - name: Upload Semgrep artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: semgrep-report
+#           path: semgrep.json
+
+#       # ----------------------------------------------------
+#       # 5. Install Gitleaks (ROBUST METHOD)
+#       # ----------------------------------------------------
+#       - name: Install Gitleaks
+#         run: |
+#           set -e
+
+#           wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
+#           tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
+
+#           # handle extracted filename variations
+#           if [ -f gitleaks ]; then
+#             chmod +x gitleaks
+#           else
+#             chmod +x gitleaks-linux-x64 || chmod +x gitleaks*
+#             mv gitleaks* gitleaks
+#             chmod +x gitleaks
+#           fi
+
+#           ./gitleaks version
+
+#       # ----------------------------------------------------
+#       # 6. Run Gitleaks
+#       # ----------------------------------------------------
+#       - name: Run Gitleaks scan
+#         run: |
+#           ./gitleaks detect --source . --report-format json --report-path gitleaks.json || true
+
+#       - name: Upload Gitleaks artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: gitleaks-report
+#           path: gitleaks.json
+
+#       # ----------------------------------------------------
+#       # 7. Debug output
+#       # ----------------------------------------------------
+#       - name: Show Semgrep output
+#         run: cat semgrep.json
+
+#       - name: Show Gitleaks output
+#         run: cat gitleaks.json || echo "no gitleaks output"
+
+#       # ----------------------------------------------------
+#       # 8. Future ingestion hooks
+#       # ----------------------------------------------------
+#       # - name: Send Semgrep results
+#       #   run: curl -X POST "https://YOUR_NGROK_URL/ingest/semgrep"
+
+#       # - name: Send Gitleaks results
+#       #   run: curl -X POST "https://YOUR_NGROK_URL/ingest/gitleaks"
+
+
 name: ShieldFlow Security Pipeline
 
 on:
@@ -10,21 +114,23 @@ jobs:
 
     steps:
       # ----------------------------------------------------
-      # 1. Checkout repo
+      # 1. Checkout repo (FULL HISTORY IMPORTANT FOR GITLEAKS)
       # ----------------------------------------------------
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-            fetch-depth: 0
-
-      #---------------------------------------------------------
-      # 2.5 debug notice
-      - name: Show repo files
-        run: ls -R
-      #---------------------------------------------------------
+          fetch-depth: 0
 
       # ----------------------------------------------------
-      # 2. Setup Python
+      # 2. Debug: show files in runner
+      # ----------------------------------------------------
+      - name: Show repo files
+        run: |
+          echo "📂 Repository contents:"
+          ls -R
+
+      # ----------------------------------------------------
+      # 3. Setup Python (for Semgrep)
       # ----------------------------------------------------
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -32,16 +138,17 @@ jobs:
           python-version: "3.12"
 
       # ----------------------------------------------------
-      # 3. Install Semgrep
+      # 4. Install Semgrep
       # ----------------------------------------------------
       - name: Install Semgrep
         run: pip install semgrep
 
       # ----------------------------------------------------
-      # 4. Run Semgrep
+      # 5. Run Semgrep (SAST)
       # ----------------------------------------------------
       - name: Run Semgrep scan
-        run: semgrep --config auto . --json > semgrep.json
+        run: |
+          semgrep --config auto . --json > semgrep.json
 
       - name: Upload Semgrep artifact
         uses: actions/upload-artifact@v4
@@ -50,7 +157,7 @@ jobs:
           path: semgrep.json
 
       # ----------------------------------------------------
-      # 5. Install Gitleaks (ROBUST METHOD)
+      # 6. Install Gitleaks
       # ----------------------------------------------------
       - name: Install Gitleaks
         run: |
@@ -59,44 +166,37 @@ jobs:
           wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
           tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
 
-          # handle extracted filename variations
-          if [ -f gitleaks ]; then
-            chmod +x gitleaks
-          else
-            chmod +x gitleaks-linux-x64 || chmod +x gitleaks*
-            mv gitleaks* gitleaks
-            chmod +x gitleaks
-          fi
+          chmod +x gitleaks || chmod +x gitleaks*
 
           ./gitleaks version
 
       # ----------------------------------------------------
-      # 6. Run Gitleaks
+      # 7. Run Gitleaks (FORCE DETECTION + DEBUG)
       # ----------------------------------------------------
       - name: Run Gitleaks scan
         run: |
-          ./gitleaks detect --source . --report-format json --report-path gitleaks.json || true
-
-      - name: Upload Gitleaks artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gitleaks-report
-          path: gitleaks.json
+          ./gitleaks detect \
+            --source . \
+            --report-format json \
+            --report-path gitleaks.json \
+            --verbose || true
 
       # ----------------------------------------------------
-      # 7. Debug output
+      # 8. Show outputs (DEBUG)
       # ----------------------------------------------------
       - name: Show Semgrep output
         run: cat semgrep.json
 
       - name: Show Gitleaks output
-        run: cat gitleaks.json || echo "no gitleaks output"
+        run: |
+          echo "🔐 Gitleaks Results:"
+          cat gitleaks.json || echo "No gitleaks output found"
 
       # ----------------------------------------------------
-      # 8. Future ingestion hooks
+      # 9. Upload artifacts
       # ----------------------------------------------------
-      # - name: Send Semgrep results
-      #   run: curl -X POST "https://YOUR_NGROK_URL/ingest/semgrep"
-
-      # - name: Send Gitleaks results
-      #   run: curl -X POST "https://YOUR_NGROK_URL/ingest/gitleaks"
+      - name: Upload Gitleaks artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks.json
